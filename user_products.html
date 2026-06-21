@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luxe Shop</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+:root{
+  --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --glass: rgba(255,255,255,0.7);
+  --shadow: 0 8px 32px rgba(31,38,135,0.15);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+
+body{
+  background: #f0f2f5;
+  background-image: radial-gradient(circle at 20% 80%, #667eea20 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, #764ba220 0%, transparent 50%);
+  min-height:100vh;
+  padding:30px 20px;
+}
+
+h1{
+  text-align:center;
+  font-size:2.5rem;
+  font-weight:700;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom:40px;
+  animation: fadeDown 0.6s ease;
+}
+
+@keyframes fadeDown{
+  from{opacity:0;transform:translateY(-20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:25px;
+  max-width:1400px;
+  margin:0 auto;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:25px;
+}
+
+.card{
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  border:1px solid rgba(255,255,255,0.5);
+  border-radius:20px;
+  padding:18px;
+  box-shadow: var(--shadow);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: popIn 0.5s ease forwards;
+  opacity:0;
+}
+
+.card:nth-child(1){animation-delay:0.1s}
+.card:nth-child(2){animation-delay:0.2s}
+.card:nth-child(3){animation-delay:0.3s}
+
+@keyframes popIn{
+  from{opacity:0;transform:scale(0.9) translateY(20px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+
+.card:hover{
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(102,126,234,0.25);
+}
+
+.card img{
+  width:100%;
+  height:200px;
+  object-fit:cover;
+  border-radius:15px;
+  transition: transform 0.4s ease;
+}
+
+.card:hover img{
+  transform: scale(1.05);
+}
+
+.card h3{
+  margin:15px 0 8px;
+  font-size:18px;
+  font-weight:600;
+  color:#2d3748;
+}
+
+.card p.price{
+  font-size:24px;
+  font-weight:700;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin:8px 0;
+}
+
+.card p.desc{
+  font-size:13px;
+  color:#718096;
+  margin-bottom:12px;
+  min-height:38px;
+}
+
+.btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background: var(--gradient);
+  color:#fff;
+  font-weight:600;
+  font-size:15px;
+  cursor:pointer;
+  transition: all 0.3s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.btn:before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:-100%;
+  width:100%;
+  height:100%;
+  background: rgba(255,255,255,0.3);
+  transition: left 0.5s;
+}
+
+.btn:hover:before{left:100%}
+
+.btn:hover{
+  transform: scale(1.03);
+  box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+}
+
+.btn:active{
+  transform: scale(0.98);
+}
+
+.cart-box{
+  background: var(--glass);
+  backdrop-filter: blur(15px);
+  border:1px solid rgba(255,255,255,0.6);
+  border-radius:20px;
+  padding:25px;
+  box-shadow: var(--shadow);
+  position:sticky;
+  top:30px;
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn{
+  from{opacity:0;transform:translateX(30px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+.cart-box h3{
+  font-size:20px;
+  margin-bottom:15px;
+  color:#2d3748;
+}
+
+.cart-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 0;
+  border-bottom:1px solid rgba(0,0,0,0.05);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+.remove-btn{
+  background:#ff6b6b;
+  border:none;
+  color:#fff;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:14px;
+  transition: all 0.2s;
+}
+
+.remove-btn:hover{
+  transform: rotate(90deg) scale(1.2);
+  background:#ff4444;
+}
+
+#total{
+  font-size:26px;
+  font-weight:700;
+  text-align:right;
+  margin:20px 0;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.checkout-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .cart-box{position:relative;top:0;margin-top:30px}
+</style>
+</head>
+<body>
+<h1>✨ Luxe Collection</h1>
+
+<div class="layout">
+  <!-- Products -->
+  <div>
+    <div id="products" class="grid">Loading products...</div>
+  </div>
+
+  <!-- Cart -->
+  <div class="cart-box">
+    <h3>🛒 Your Cart</h3>
+    <div id="cart"><p style="color:#999;text-align:center;padding:20px 0">Empty cart. Add something nice 😉</p></div>
+    <div id="total">Total: ₦0</div>
+    <button class="btn checkout-btn" onclick="checkout()">Checkout</button>
+  </div>
+</div>
+
+<script>
+let products = [];
+let cart = [];
+
+const API_URL = window.location.origin; // IMPORTANT FIX (no hardcoding)
+
+async function loadProducts() {
+  try {
+    const res = await fetch(API_URL + '/api/products');
+    const data = await res.json();
+
+    products = Array.isArray(data) ? data : [];
+
+    // normalize (VERY IMPORTANT FIX)
+    products = products.map(p => ({
+      id: String(p.id || ''),
+      name: p.name || '',
+      price: Number(p.price) || 0,
+      desc: p.desc || '',
+      img: p.img || ''
+    })).filter(p => p.name);
+
+    renderProducts();
+  } catch (e) {
+    document.getElementById('products').innerHTML =
+      '<p style="text-align:center;color:red">Failed to load products</p>';
+  }
+}
+
+function renderProducts() {
+  const container = document.getElementById('products');
+
+  if (!products.length) {
+    container.innerHTML =
+      '<p style="text-align:center;color:#999">No products yet</p>';
+    return;
+  }
+
+  container.innerHTML = products.map(p => `
+    <div class="card">
+      <img src="${p.img || 'https://via.placeholder.com/300x200'}">
+      <h3>${p.name}</h3>
+      <p class="price">₦${Number(p.price).toLocaleString()}</p>
+      <p class="desc">${p.desc}</p>
+      <button class="btn" onclick="addToCart('${p.id}')">Add to Cart</button>
+    </div>
+  `).join('');
+}
+
+function addToCart(id) {
+  const product = products.find(p => String(p.id) === String(id));
+  if (!product) return;
+
+  cart.push(product);
+  renderCart();
+
+  event.target.textContent = '✓ Added';
+  setTimeout(() => event.target.textContent = 'Add to Cart', 800);
+}
+
+function renderCart() {
+  const cartDiv = document.getElementById('cart');
+  const totalDiv = document.getElementById('total');
+
+  if (!cart.length) {
+    cartDiv.innerHTML = '<p style="color:#999;text-align:center">Empty cart</p>';
+    totalDiv.textContent = 'Total: ₦0';
+    return;
+  }
+
+  cartDiv.innerHTML = cart.map((item, i) => `
+    <div class="cart-item">
+      <span>${item.name}</span>
+      <span>
+        ₦${Number(item.price).toLocaleString()}
+        <button class="remove-btn" onclick="removeFromCart(${i})">×</button>
+      </span>
+    </div>
+  `).join('');
+
+  const total = cart.reduce((s, i) => s + Number(i.price), 0);
+  totalDiv.textContent = 'Total: ₦' + total.toLocaleString();
+}
+
+function removeFromCart(i) {
+  cart.splice(i, 1);
+  renderCart();
+}
+
+async function checkout() {
+  if (!cart.length) return alert('Cart empty');
+
+  const user = JSON.parse(localStorage.getItem('shop_user') || '{}');
+  const total = cart.reduce((s, i) => s + Number(i.price), 0);
+
+  const btn = document.querySelector('.checkout-btn');
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+
+  try {
+    const res = await fetch(API_URL + '/api/order', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        customer: user.name || 'Guest',
+        phone: user.phone || '',
+        items: cart,
+        total
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert('Order placed! ID: ' + data.orderId);
+      cart = [];
+      renderCart();
+    } else {
+      alert(data.error || 'Order failed');
+    }
+
+  } catch (e) {
+    alert('Network error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Checkout';
+}
+
+loadProducts();
+
+setInterval(() => {
+  loadProducts();
+}, 10000);
+</script>
+</body>
+</html>

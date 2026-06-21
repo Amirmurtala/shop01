@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI}
+body{background:#f8fafc;color:#1e293b}
+.container{max-width:600px;margin:0 auto;padding:20px}
+.card{background:white;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+h2{font-size:22px;margin-bottom:12px}
+input,textarea,button{width:100%;padding:12px;margin:8px 0;border:1px solid #e2e8f0;border-radius:10px;font-size:15px}
+button{background:#2563eb;color:white;border:none;font-weight:600;cursor:pointer;transition:0.2s}
+button:active{transform:scale(0.98)}
+button.danger{background:#dc2626}
+button.success{background:#16a34a}
+button:disabled{opacity:0.5;cursor:not-allowed}
+.grid{display:grid;gap:12px}
+.product-item{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid #e2e8f0;border-radius:12px}
+.product-item img{width:60px;height:60px;object-fit:cover;border-radius:8px}
+.product-info{flex:1}
+.product-info b{display:block;font-size:15px}
+.product-info small{color:#64748b;font-size:13px}
+.hidden{display:none}
+#imgPreview{width:120px;height:120px;object-fit:cover;border-radius:12px;border:2px dashed #cbd5e1;display:none;margin:8px auto}
+.status{padding:10px;border-radius:8px;margin:8px 0;font-size:14px;text-align:center}
+.status.success{background:#dcfce7;color:#166534}
+.status.error{background:#fee2e2;color:#991b1b}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="card">
+    <h2>🔐 Admin Login</h2>
+    <input type="password" id="adminPass" placeholder="Enter admin password">
+    <button onclick="login()">Login</button>
+    <div id="loginStatus"></div>
+  </div>
+
+  <!-- DASHBOARD SCREEN -->
+  <div id="dashboard" class="hidden">
+    <div class="card">
+      <h2>➕ Add Product</h2>
+      <input id="pName" placeholder="Product name">
+      <input id="pPrice" placeholder="Price ₦" type="number">
+      <textarea id="pDesc" placeholder="Description" rows="3"></textarea>
+      <input type="file" id="pImgFile" accept="image/*">
+      <img id="imgPreview">
+      <button onclick="addProduct()">Add Product</button>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>📦 Products <span id="count">0</span></h2>
+       <div class="card">
+  <h2>📦 Orders</h2>
+  <div id="orders"></div>
+</div>
+
+      </div>
+      <div id="productList" class="grid"></div>
+      <div id="saveStatus"></div>
+    </div>
+
+    <button class="danger" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<script>
+let products = [];
+let uploadedImage = '';
+let ADMIN_PASS = '';
+
+// SET THIS TO YOUR RENDER URL
+const API_URL = 'https://shopping-5f6c.onrender.com';
+
+const loginScreen = document.getElementById('loginScreen');
+const dashboard = document.getElementById('dashboard');
+
+// LOGIN - FIXED: use /api/admin/auth instead of /save
+async function login(){
+  ADMIN_PASS = document.getElementById('adminPass').value;
+  if(!ADMIN_PASS) return showStatus('loginStatus','error','Enter password');
+
+  showStatus('loginStatus','', 'Checking...');
+  try {
+    const res = await fetch(API_URL + '/api/admin/auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:ADMIN_PASS})
+    });
+
+    if(res.ok){
+      sessionStorage.setItem('admin_pass', ADMIN_PASS);
+      loginScreen.classList.add('hidden');
+      dashboard.classList.remove('hidden');
+      loadProducts();
+    } else {
+      const data = await res.json();
+      showStatus('loginStatus','error', data.error || 'Wrong password');
+    }
+  } catch(e){
+    showStatus('loginStatus','error','Server not connected. Check Render URL');
+    console.error(e);
+  }
+}
+
+function logout(){
+  ADMIN_PASS = '';
+  sessionStorage.removeItem('admin_pass');
+  document.getElementById('adminPass').value = '';
+  dashboard.classList.add('hidden');
+  loginScreen.classList.remove('hidden');
+  products = [];
+}
+
+// IMAGE COMPRESS - same as yours
+document.getElementById('pImgFile').addEventListener('change',function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      const canvas = document.createElement('canvas');
+      let w=img.width, h=img.height, max=400;
+      if(w>h && w>max){h*=max/w;w=max;} else if(h>max){w*=max/h;h=max;}
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      uploadedImage = canvas.toDataURL('image/jpeg',0.6);
+      document.getElementById('imgPreview').src = uploadedImage;
+      document.getElementById('imgPreview').style.display='block';
+    }
+    img.src = ev.target.result;
+  }
+  reader.readAsDataURL(file);
+});
+
+function addProduct(){
+  if(!Array.isArray(products)) products = [];
+  const name=document.getElementById('pName').value.trim();
+  const price=document.getElementById('pPrice').value.trim();
+  const desc=document.getElementById('pDesc').value.trim();
+  if(!name||!price){alert('Name + Price required');return;}
+
+  products.push({id:Date.now().toString(),name,price,desc,img:uploadedImage});
+  renderList();
+  ['pName','pPrice','pDesc','pImgFile'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('imgPreview').style.display='none';
+  uploadedImage='';
+}
+
+function renderList(){
+  document.getElementById('count').innerText = products.length;
+  if(products.length===0){
+    document.getElementById('productList').innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px">No products yet. Add one above.</p>';
+    return;
+  }
+  document.getElementById('productList').innerHTML = products.map((p,i)=>`
+    <div class="product-item">
+      <img src="${p.img || 'https://via.placeholder.com/60'}" alt="">
+      <div class="product-info">
+        <b>${p.name}</b>
+        <small>₦${p.price} • ${p.desc.slice(0,40)}...</small>
+      </div>
+      <button class="danger" style="width:auto;padding:8px 12px" onclick="del(${i})">Delete</button>
+    </div>
+  `).join('');
+}
+
+async function del(i){
+
+  const product = products[i];
+
+  if(!confirm('Delete product?')){
+    return;
+  }
+
+  const res = await fetch(
+    API_URL + '/api/products/delete',
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        id: product.id
+      })
+    }
+  );
+
+  if(res.ok){
+    loadProducts();
+  }
+}
+
+async function loadOrders(){
+
+  const res =
+    await fetch(API_URL + '/api/orders');
+
+  const orders = await res.json();
+
+  document.getElementById('orders')
+    .innerHTML = orders.map(o => `
+
+      <div class="product-item">
+
+        <div class="product-info">
+
+          <b>${o.customer}</b>
+
+          <small>
+            ${o.phone}
+          </small>
+
+          <small>
+            ₦${Number(o.total).toLocaleString()}
+          </small>
+
+          <small>
+            ${o.status}
+          </small>
+
+        </div>
+
+        <button
+        onclick="updateStatus(
+          '${o.id}',
+          'delivered'
+        )">
+          Delivered
+        </button>
+
+      </div>
+
+    `).join('');
+}
+
+async function updateStatus(id,status){
+
+  await fetch(
+    API_URL + '/api/orders/update',
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        id,
+        status
+      })
+    }
+  );
+
+  loadOrders();
+}
+
+// LOAD FROM SERVER - FIXED URL
+async function addProduct(){
+
+  const name =
+    document.getElementById('pName').value.trim();
+
+  const price =
+    document.getElementById('pPrice').value.trim();
+
+  const desc =
+    document.getElementById('pDesc').value.trim();
+
+  if(!name || !price){
+    alert('Name + Price required');
+    return;
+  }
+
+  const product = {
+    id: Date.now().toString(),
+    name,
+    price:Number(price),
+    desc,
+    img:uploadedImage
+  };
+
+  const res = await fetch(
+    API_URL + '/api/products/save',
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify(product)
+    }
+  );
+
+  if(res.ok){
+
+    loadProducts();
+
+    ['pName','pPrice','pDesc','pImgFile']
+      .forEach(id =>
+        document.getElementById(id).value=''
+      );
+
+    uploadedImage='';
+
+    document.getElementById('imgPreview')
+      .style.display='none';
+  }
+}
+
+
+function showStatus(id,type,msg){
+  const el = document.getElementById(id);
+  el.className = 'status ' + type;
+  el.innerText = msg;
+}
+window.onload = () => {
+
+  const saved =
+    sessionStorage.getItem('admin_pass');
+
+  if(saved){
+
+    document.getElementById(
+      'adminPass'
+    ).value = saved;
+
+    login();
+  }
+}
+</script>
+</body>
+</html>

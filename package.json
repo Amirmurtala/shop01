@@ -1,0 +1,14 @@
+{
+  "name": "shop-app",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.2",
+    "google-spreadsheet": "^4.0.4",
+    "google-auth-library": "^9.8.0"
+  }
+}
